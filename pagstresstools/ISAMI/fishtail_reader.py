@@ -22,6 +22,23 @@ class fastener_system(object):
         return rep
 
 
+class material_system(object):
+    """material system class"""
+
+    __Class_Name__ = "material system"
+    __lib_name__ = "ISAMI_lib"
+
+    def __init__(self, name, library, mat_name, spec):
+        self.name = str(name)
+        self.library = str(library)
+        self.mat_name = str(mat_name)
+        self.spec = str(spec)
+
+    def __repr__(self) -> str:
+        rep = f"{self.__Class_Name__}({self.name}, {self.library}, {self.mat_name}, {self.spec})"
+        return rep
+
+
 class fishtail(object):
     """read fishtail data from excel file"""
 
@@ -35,11 +52,14 @@ class fishtail(object):
     def __init__(self, file_name=None):
 
         self.file_name = file_name
+        self.isami_version = "0.1"
+        
         # Metadata
-        # TODDO: MSN, analysis, date, time, user, loadloop?
+        # TODO: MSN, analysis, date, time, user, loadloop?
         self.fastener_system_table = None
         self.fastener_system_dict = {}
-               
+        self.material_system_table = None
+        self.material_system_dict = {}
 
         # check if file exists
 
@@ -67,13 +87,16 @@ class fishtail(object):
                 self.fishtail_sheets[sheet] = self.data[sheet]
             self.fishtail_sheet_names = list(self.fishtail_sheets.keys())
             self.fishtail_sheet_names.sort()
-            self.fishtail_sheet_names.sort(key=len)
-            self.fishtail_sheet_names.sort(key=str.lower)
-            self.fishtail_sheet_names.sort(key=str.upper)
+
+            # TODO: check if sheet names are correct
 
             if "FastenerSystem Table" in self.fishtail_sheet_names:
                 self.make_fastener_system_table_from_file()
                 self.make_fastener_system_dict_from_table()
+            
+            if "Material Table" in self.fishtail_sheet_names:
+                self.make_material_system_table_from_file()
+                self.make_material_system_dict_from_table()
 
     def read_fishtail(self):
         """read fishtail data from excel file"""
@@ -86,12 +109,12 @@ class fishtail(object):
         """return fastener system table"""
         self.fastener_system_table = self.fishtail_sheets["FastenerSystem Table"]
         return self.fastener_system_table
-    
+
     def get_fastener_system_table(self):
         """return fastener system table"""
 
         return self.fastener_system_table
-    
+
     def make_fastener_system_dict_from_table(self):
         """return fastener system dictionary"""
 
@@ -128,7 +151,7 @@ class fishtail(object):
         except KeyError:
             print("ERROR: fastener system not found")
             return None
-            
+
     def get_fastener_system_list(self):
         """return fastener system list"""
 
@@ -139,18 +162,92 @@ class fishtail(object):
         It converts the fastener system dictionary to a fastener system table.
         """
         df_list = []
-        for name, fs in self.fastener_system_dict.items():
-            df_list.append({"AirbusEO_TFastenerSystem" : name, "pin" : fs.pin, "nutCollar" : fs.nutcollar, "diameter" : fs.diameter})
-            
+        for _, fs in self.fastener_system_dict.items():
+            df_list.append(
+                {
+                    "AirbusEO_TFastenerSystem": fs.name,
+                    "pin": fs.pin,
+                    "nutCollar": fs.nutcollar,
+                    "diameter": fs.diameter,
+                }
+            )
+
         self.fastener_system_table = pd.DataFrame(df_list)
 
+    #'Material Table',
+    def make_material_system_table_from_file(self):
+        """return material system table"""
+        self.material_system_table = self.fishtail_sheets["Material Table"]
+        return self.material_system_table
+    
+    def get_material_system_table(self):
+        """return material system table"""
 
-        #'FastenerSystem Table',
-        #'Material Table',
-        #'Stacking FML',
-        #'Metallic Profile Table',
-        #'Joint Table',
-        #'Panel Table',
-        #'Panel FML',
-        #'Frame Table',
-        #'Stringer Table'
+        return self.material_system_table
+
+    def make_material_system_dict_from_table(self):
+        """return material system dictionary"""
+
+        for _, row in self.material_system_table.iterrows():
+            self.material_system_dict[
+                row["Material label"]
+            ] = material_system(
+                row["Material label"],
+                row["Library"],
+                row["Material name"],
+                row["Specification"],
+            )
+        return self.material_system_dict
+
+    def put_material(self, material_system):
+        """put material in dictionary"""
+
+        self.material_system_dict[material_system.name] = material_system
+        self.material_system_dict2material_system_table()
+        return self.material_system_dict
+    
+    def pop_material(self, material_system):
+        """take material out of dictionary"""
+
+        self.material_system_dict.pop(material_system)
+
+        return self.material_system_dict
+
+    def get_material_system(self, material_system):
+        """return material system"""
+        try:
+            material_system = self.material_system_dict[material_system]
+            return material_system
+        except KeyError:
+            print("ERROR: material system not found")
+            return None
+    
+    def get_material_system_list(self):
+        """return material system list"""
+
+        return list(self.material_system_dict.keys())
+    
+    def material_system_dict2material_system_table(self):
+        """
+        It converts the material system dictionary to a material system table.
+        """
+        df_list = []
+        for name, ms in self.material_system_dict.items():
+            df_list.append(
+                {
+                    "Material label": name,
+                    "Library": ms.library,
+                    "Material name": ms.mat_name,
+                    "Specification": ms.spec,
+                }
+            )
+
+        self.material_system_table = pd.DataFrame(df_list)
+
+    #'Stacking FML',
+    #'Metallic Profile Table',
+    #'Joint Table',
+    #'Panel Table',
+    #'Panel FML',
+    #'Frame Table',
+    #'Stringer Table'

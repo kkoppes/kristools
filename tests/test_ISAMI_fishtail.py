@@ -4,7 +4,7 @@ import math
 import numpy as np
 import pytest
 
-from pagstresstools.ISAMI.fishtail_reader import fishtail, fastener_system
+from pagstresstools.ISAMI.fishtail_reader import fishtail, fastener_system, material_system
 
 # test for fishtail class
 def test_fishtail_class():
@@ -69,5 +69,38 @@ def test_fishtail_class():
     assert fishtail_test_fast.fastener_system_table.iloc[-1,1] == 'pin_28'
     assert fishtail_test_fast.fastener_system_table.iloc[-1,2] == 'nut_28'
 
+    # test for material_system_table
+    fishtail_test_mat = fishtail('./tests/test_fishtails/MAT_test_1.xlsx')
+    assert fishtail_test_mat.material_system_table.shape == (21, 4)
+    assert fishtail_test_mat.material_system_table.iloc[0,0] == 'mat_label_1'
+    assert fishtail_test_mat.material_system_table.iloc[0,1] == 'Referenced'
+    assert fishtail_test_mat.material_system_table.iloc[0,2] == 'mat_name_1'
+    assert fishtail_test_mat.material_system_table.iloc[0,3] == 'spec_1'
+    assert fishtail_test_mat.material_system_table.iloc[1,0] == 'mat_label_2'
 
-    #assert fishtail_test.fishtail_sheets['fishtail_1'].iloc[2,0] == 'A4'
+    assert fishtail_test_mat.get_material_system('mat_label_1').name == 'mat_label_1'
+    assert fishtail_test_mat.get_material_system('mat_label_1').spec == 'spec_1'
+    assert fishtail_test_mat.get_material_system('mat_label_1').library == 'Referenced'
+    assert fishtail_test_mat.get_material_system('mat_label_1').mat_name == 'mat_name_1'
+
+    # test for put_material
+    fishtail_test_mat.put_material(material_system('mat_label_28', 'Referenced', 'mat_name_28', 'spec_28'))
+    assert fishtail_test_mat.get_material_system('mat_label_28').name == 'mat_label_28'
+    assert fishtail_test_mat.material_system_table.iloc[-1,0] == 'mat_label_28'
+    assert fishtail_test_mat.material_system_table.iloc[-1,1] == 'Referenced'
+    assert fishtail_test_mat.material_system_table.iloc[-1,2] == 'mat_name_28'
+    assert fishtail_test_mat.material_system_table.iloc[-1,3] == 'spec_28'
+
+    # test for pop_material
+    fishtail_test_mat.pop_material('mat_label_28')
+    assert fishtail_test_mat.get_material_system('mat_label_28') == None
+    assert fishtail_test_mat.material_system_table.iloc[-1,0] == 'mat_label_28'
+    assert fishtail_test_mat.material_system_table.iloc[-1,1] == 'Referenced'
+    assert fishtail_test_mat.material_system_table.iloc[-1,2] == 'mat_name_28'
+    assert fishtail_test_mat.material_system_table.iloc[-1,3] == 'spec_28'
+
+    # test for get_material_system_list
+    assert fishtail_test_mat.get_material_system_list()[:7] == ['mat_label_1', 'mat_label_2', 'mat_label_3', 'mat_label_4', 'mat_label_5', 'mat_label_6', 'mat_label_7']
+
+
+    
