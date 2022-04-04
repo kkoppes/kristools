@@ -1,8 +1,9 @@
-# ISAMI fishtal reader
+"""ISAMI fishtal reader"""
 import sys
-import pandas as pd
 import os
 import time
+import pandas as pd
+
 
 
 class fastener_system(object):
@@ -53,13 +54,15 @@ class fishtail(object):
 
         self.file_name = file_name
         self.isami_version = "0.1"
-        
+
         # Metadata
         # TODO: MSN, analysis, date, time, user, loadloop?
         self.fastener_system_table = None
         self.fastener_system_dict = {}
         self.material_system_table = None
         self.material_system_dict = {}
+        self.profile_system_table = None
+        self.profile_system_dict = {}
 
         # check if file exists
 
@@ -93,7 +96,7 @@ class fishtail(object):
             if "FastenerSystem Table" in self.fishtail_sheet_names:
                 self.make_fastener_system_table_from_file()
                 self.make_fastener_system_dict_from_table()
-            
+
             if "Material Table" in self.fishtail_sheet_names:
                 self.make_material_system_table_from_file()
                 self.make_material_system_dict_from_table()
@@ -105,6 +108,7 @@ class fishtail(object):
         self.data = pd.read_excel(self.file_name, sheet_name=None)
         self.fishtail_sheet_names = list(self.data.keys())
 
+    # FastenerSystem Table
     def make_fastener_system_table_from_file(self):
         """return fastener system table"""
         self.fastener_system_table = self.fishtail_sheets["FastenerSystem Table"]
@@ -129,25 +133,25 @@ class fishtail(object):
             )
         return self.fastener_system_dict
 
-    def put_fastener(self, fastener_system):
+    def put_fastener(self, a_fastener_system):
         """put fastener in dictionary"""
 
-        self.fastener_system_dict[fastener_system.name] = fastener_system
+        self.fastener_system_dict[a_fastener_system.name] = a_fastener_system
         self.fastener_system_dict2fastener_system_table()
         return self.fastener_system_dict
 
-    def pop_fastener(self, fastener_system):
+    def pop_fastener(self, fastener_system_name):
         """take fastener out of dictionary"""
 
-        self.fastener_system_dict.pop(fastener_system)
+        self.fastener_system_dict.pop(fastener_system_name)
 
         return self.fastener_system_dict
 
-    def get_fastener_system(self, fastener_system):
+    def get_fastener_system(self, fastener_system_name):
         """return fastener system"""
         try:
-            fastener_system = self.fastener_system_dict[fastener_system]
-            return fastener_system
+            a_fastener_system = self.fastener_system_dict[fastener_system_name]
+            return a_fastener_system
         except KeyError:
             print("ERROR: fastener system not found")
             return None
@@ -179,7 +183,7 @@ class fishtail(object):
         """return material system table"""
         self.material_system_table = self.fishtail_sheets["Material Table"]
         return self.material_system_table
-    
+
     def get_material_system_table(self):
         """return material system table"""
 
@@ -189,9 +193,7 @@ class fishtail(object):
         """return material system dictionary"""
 
         for _, row in self.material_system_table.iterrows():
-            self.material_system_dict[
-                row["Material label"]
-            ] = material_system(
+            self.material_system_dict[row["Material label"]] = material_system(
                 row["Material label"],
                 row["Library"],
                 row["Material name"],
@@ -199,34 +201,34 @@ class fishtail(object):
             )
         return self.material_system_dict
 
-    def put_material(self, material_system):
+    def put_material(self, a_material_system):
         """put material in dictionary"""
 
-        self.material_system_dict[material_system.name] = material_system
+        self.material_system_dict[a_material_system.name] = a_material_system
         self.material_system_dict2material_system_table()
         return self.material_system_dict
-    
-    def pop_material(self, material_system):
+
+    def pop_material(self, material_system_name):
         """take material out of dictionary"""
 
-        self.material_system_dict.pop(material_system)
+        self.material_system_dict.pop(material_system_name)
 
         return self.material_system_dict
 
-    def get_material_system(self, material_system):
+    def get_material_system(self, material_system_name):
         """return material system"""
         try:
-            material_system = self.material_system_dict[material_system]
-            return material_system
+            a_material_system = self.material_system_dict[material_system_name]
+            return a_material_system
         except KeyError:
             print("ERROR: material system not found")
             return None
-    
+
     def get_material_system_list(self):
         """return material system list"""
 
         return list(self.material_system_dict.keys())
-    
+
     def material_system_dict2material_system_table(self):
         """
         It converts the material system dictionary to a material system table.
